@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: loading-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    env_file:
+      - .env
+    networks:
+      cmp-network:
+        aliases:
+          - n8n
+      nginx-network:
+        aliases:
+          - n8n
+    environment:
+      - N8N_HOST=n8n.loadingtechnology.app
+      - N8N_PORT=5678
+      - WEBHOOK_URL=https://n8n.loadingtechnology.app
+      - N8N_PROTOCOL=https
+      - N8N_AUTH_MODE=oauth2
+      # DO Managed PostgreSQL (replace loading-postgres)
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${DO_DB_HOST}
+      - DB_POSTGRESDB_PORT=${DO_DB_PORT:-25060}
+      - DB_POSTGRESDB_DATABASE=${DO_DB_NAME:-loading_postgres}
+      - DB_POSTGRESDB_USER=${DO_DB_USER:-doadmin}
+      - DB_POSTGRESDB_PASSWORD=${DO_DB_PASSWORD}
+      - DB_POSTGRESDB_SCHEMA=public
+      - DB_POSTGRESDB_SSL=true
+      - DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED=false
+      - N8N_OAUTH2_CLIENT_ID=ws8wBaPdXYFWwNAtva4YWQmCuT1Ah0AT
+      - N8N_OAUTH2_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
+      - N8N_OAUTH2_ISSUER=https://dev-63h751qzectzner7.us.auth0.com/
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/do-project-ca.crt
+    volumes:
+      - /usr/local/share/ca-certificates/do-project-ca.crt:/etc/ssl/certs/do-project-ca.crt:ro
+
+networks:
+  cmp-network:
+    external: true
+    name: cmp-network
+  nginx-network:
+    external: true
+    name: nginx-network
