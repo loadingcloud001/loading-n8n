@@ -21,11 +21,13 @@ n8n is an open-source workflow automation platform for connecting services and a
 | `N8N_PORT` | Port | `5678` |
 | `WEBHOOK_URL` | Webhook URL | `https://n8n.loadingtechnology.app` |
 | `DB_TYPE` | Database type | `postgresdb` |
-| `DB_POSTGRESDB_HOST` | PostgreSQL host | `loading-postgres` |
-| `DB_POSTGRESDB_PORT` | PostgreSQL port | `5432` |
-| `DB_POSTGRESDB_DATABASE` | Database name | `postgres` |
-| `DB_POSTGRESDB_USER` | User | `postgres` |
-| `DB_POSTGRESDB_PASSWORD` | Password | From `loading-postgres` container |
+| `DB_POSTGRESDB_HOST` | PostgreSQL host | `cmp-postgres-do-user-31385694-0.e.db.ondigitalocean.com` |
+| `DB_POSTGRESDB_PORT` | PostgreSQL port | `25060` |
+| `DB_POSTGRESDB_DATABASE` | Database name | `loading_postgres` |
+| `DB_POSTGRESDB_USER` | User | `doadmin` |
+| `DB_POSTGRESDB_PASSWORD` | Password | From DO Managed PostgreSQL |
+| `DB_POSTGRESDB_SSL` | SSL required | `true` |
+| `DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED` | SSL verification | `false` |
 | `N8N_AUTH_MODE` | Auth mode | `oauth2` |
 | `N8N_OAUTH2_CLIENT_ID` | OAuth2 Client ID | `ws8wBaPdXYFWwNAtva4YWQmCuT1Ah0AT` |
 | `N8N_OAUTH2_CLIENT_SECRET` | OAuth2 Secret | From `auth0.age` secrets |
@@ -41,7 +43,7 @@ n8n is an open-source workflow automation platform for connecting services and a
 
 ### Services Used
 - Auth0 (SSO login at `dev-63h751qzectzner7.us.auth0.com`)
-- loading-postgres (PostgreSQL at `loading-postgres:5432`)
+- DO Managed PostgreSQL (PostgreSQL at `cmp-postgres-do-user-31385694-0.e.db.ondigitalocean.com:25060`)
 
 ### Services That Depend On It
 - Other services needing workflow automation
@@ -85,9 +87,9 @@ curl http://localhost:5678/
 ## Deployment Checklist
 
 - [x] Configure Auth0 Application
-- [x] Connect to loading-postgres
+- [x] Connect to DO Managed PostgreSQL
 - [x] Set up OAuth2 authentication
 - [x] Deploy n8n container
 - [x] Verify: `curl http://localhost:5678/` returns HTTP 200
-- [ ] Test SSO login at `https://n8n.loadingtechnology.app`
+- [x] Test SSO login at `https://n8n.loadingtechnology.app`
 - [ ] Create first workflow
