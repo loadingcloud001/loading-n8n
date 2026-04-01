@@ -7,35 +7,35 @@ n8n is an open-source workflow automation platform for connecting services and a
 ## Deployment
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  Nginx Reverse Proxy                     │
-│                   (auth0-authenticated)                 │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────┐
-│                        n8n                              │
-│                  (Docker Compose)                        │
-│                                                              │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  │
-│  │ Workflow│  │  Node   │  │Webhook  │  │  Exec   │  │
-│  │ Editor  │  │ Library │  │ Handler │  │  Log    │  │
-│  └─────────┘  └─────────┘  └─────────┘  └─────────┘  │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-         ┌────────────┼────────────┐
-         ▼            ▼            ▼
-┌─────────────┐ ┌───────────┐ ┌─────────┐
-│ loading-    │ │   Auth0   │ │ Backblaze│
-│ postgres    │ │  (SSO)   │ │   B2    │
-└─────────────┘ └───────────┘ └─────────┘
++-------------------------------------------------------------+
+|                  Nginx Reverse Proxy                           |
+|                   (auth0-authenticated)                     |
++-------------------------+-----------------------------------+
+                          |
+                          v
++-------------------------------------------------------------+
+|                        n8n                                  |
+|                  (Docker Compose)                            |
+|                                                               |
+|  +---------+  +---------+  +---------+  +---------+          |
+|  | Workflow|  |  Node   |  |Webhook  |  |  Exec   |          |
+|  | Editor  |  | Library |  | Handler |  |  Log    |          |
+|  +---------+  +---------+  +---------+  +---------+          |
++-------------------------+-----------------------------------+
+                          |
+         +----------------+----------------+
+         v                v                v
++-------------+ +-------------------+ +---------+
+|    DO      | |       Auth0       | |Backblaze|
+| PostgreSQL | |        (SSO)      | |   B2    |
++-------------+ +-------------------+ +---------+
 ```
 
 ## Data Sources
 
 | Source | Connection | Purpose |
 |--------|-----------|---------|
-| loading-postgres | PostgreSQL | Workflow and execution data |
+| DO Managed PostgreSQL | PostgreSQL | Workflow and execution data |
 | Auth0 | OAuth2 | Single sign-on |
 | Backblaze B2 | S3-compatible | File storage for workflows |
 
@@ -55,9 +55,9 @@ n8n is an open-source workflow automation platform for connecting services and a
 ## Dependencies
 
 ```
-n8n ─────────→ Auth0 (authentication)
-      └────────→ loading-postgres (workflow storage)
-      └────────→ Backblaze B2 (file attachments)
+n8n ------> Auth0 (authentication)
+      +----> DO Managed PostgreSQL (workflow storage)
+      +----> Backblaze B2 (file attachments)
 ```
 
 ## Environment Variables
@@ -68,10 +68,10 @@ n8n ─────────→ Auth0 (authentication)
 | `N8N_PORT` | Service port |
 | `WEBHOOK_URL` | Public webhook URL |
 | `DB_TYPE` | Database type (postgresdb) |
-| `DB_POSTGRESDB_HOST` | loading-postgres |
-| `DB_POSTGRESDB_PORT` | PostgreSQL port (5432) |
-| `DB_POSTGRESDB_DATABASE` | Database name |
-| `DB_POSTGRESDB_USER` | PostgreSQL user |
+| `DB_POSTGRESDB_HOST` | DO Managed PostgreSQL host |
+| `DB_POSTGRESDB_PORT` | PostgreSQL port (25060) |
+| `DB_POSTGRESDB_DATABASE` | Database name (loading_postgres) |
+| `DB_POSTGRESDB_USER` | PostgreSQL user (doadmin) |
 | `DB_POSTGRESDB_PASSWORD` | PostgreSQL password |
 | `N8N_AUTH_MODE` | Authentication mode (oauth2) |
 | `N8N_OAUTH2_CLIENT_ID` | Auth0 client ID |
@@ -81,14 +81,14 @@ n8n ─────────→ Auth0 (authentication)
 ## Connection to PostgreSQL
 
 ```
-DB_POSTGRESDB_HOST=loading-postgres
-DB_POSTGRESDB_PORT=5432
-DB_POSTGRESDB_DATABASE=postgres
-DB_POSTGRESDB_USER=postgres
+DB_POSTGRESDB_HOST=cmp-postgres-do-user-31385694-0.e.db.ondigitalocean.com
+DB_POSTGRESDB_PORT=25060
+DB_POSTGRESDB_DATABASE=loading_postgres
+DB_POSTGRESDB_USER=doadmin
 DB_POSTGRESDB_PASSWORD=<password>
 ```
 
 ## Backup
 
-- Workflows: Stored in loading-postgres
+- Workflows: Stored in DO Managed PostgreSQL
 - Executions: Daily backup to Backblaze B2

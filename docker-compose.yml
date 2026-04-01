@@ -22,7 +22,7 @@ services:
       - WEBHOOK_URL=https://n8n.loadingtechnology.app
       - N8N_PROTOCOL=https
       - N8N_AUTH_MODE=oauth2
-      # DO Managed PostgreSQL (replace loading-postgres)
+      # DO Managed PostgreSQL
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=${DO_DB_HOST}
       - DB_POSTGRESDB_PORT=${DO_DB_PORT:-25060}
