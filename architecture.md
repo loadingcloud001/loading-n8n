@@ -26,8 +26,8 @@ n8n is an open-source workflow automation platform for connecting services and a
          +----------------+----------------+
          v                v                v
 +-------------+ +-------------------+ +---------+
-|    DO      | |       Auth0       | |Backblaze|
-| PostgreSQL | |        (SSO)      | |   B2    |
+|    DO      | |       Auth0       | | DO Spaces|
+| PostgreSQL | |        (SSO)      | |    S3    |
 +-------------+ +-------------------+ +---------+
 ```
 
@@ -37,7 +37,7 @@ n8n is an open-source workflow automation platform for connecting services and a
 |--------|-----------|---------|
 | DO Managed PostgreSQL | PostgreSQL | Workflow and execution data |
 | Auth0 | OAuth2 | Single sign-on |
-| Backblaze B2 | S3-compatible | File storage for workflows |
+| DO Spaces | S3-compatible | File storage for workflows |
 
 ## Ports
 
@@ -57,7 +57,7 @@ n8n is an open-source workflow automation platform for connecting services and a
 ```
 n8n ------> Auth0 (authentication)
       +----> DO Managed PostgreSQL (workflow storage)
-      +----> Backblaze B2 (file attachments)
+      +----> DO Spaces S3 (file attachments)
 ```
 
 ## Environment Variables
@@ -91,4 +91,4 @@ DB_POSTGRESDB_PASSWORD=<password>
 ## Backup
 
 - Workflows: Stored in DO Managed PostgreSQL
-- Executions: Daily backup to Backblaze B2
+- Executions: Daily backup to DO Spaces
