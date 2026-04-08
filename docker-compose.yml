@@ -7,8 +7,6 @@ services:
     restart: unless-stopped
     ports:
       - "5678:5678"
-    env_file:
-      - .env
     networks:
       cmp-network:
         aliases:
@@ -22,11 +20,11 @@ services:
       - WEBHOOK_URL=https://n8n.loadingtechnology.app
       - N8N_PROTOCOL=https
       - N8N_AUTH_MODE=oauth2
-      # DO Managed PostgreSQL
+      # DO Managed PostgreSQL (DO 003)
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=${DO_DB_HOST}
       - DB_POSTGRESDB_PORT=${DO_DB_PORT:-25060}
-      - DB_POSTGRESDB_DATABASE=${DO_DB_NAME:-loading_postgres}
+      - DB_POSTGRESDB_DATABASE=${DO_DB_NAME:-speckle_fresh}
       - DB_POSTGRESDB_USER=${DO_DB_USER:-doadmin}
       - DB_POSTGRESDB_PASSWORD=${DO_DB_PASSWORD}
       - DB_POSTGRESDB_SCHEMA=public
@@ -35,6 +33,10 @@ services:
       - N8N_OAUTH2_CLIENT_ID=ws8wBaPdXYFWwNAtva4YWQmCuT1Ah0AT
       - N8N_OAUTH2_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
       - N8N_OAUTH2_ISSUER=https://dev-63h751qzectzner7.us.auth0.com/
+      - N8N_OAUTH2_AUTH_URL=https://dev-63h751qzectzner7.us.auth0.com/authorize
+      - N8N_OAUTH2_CALLBACK_URL=https://n8n.loadingtechnology.app/rest/authenticate
+      - N8N_OAUTH2_TOKEN_URL=https://dev-63h751qzectzner7.us.auth0.com/oauth/token
+      - N8N_OAUTH2_SCOPES=openid profile email
       - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/do-project-ca.crt
     volumes:
       - /usr/local/share/ca-certificates/do-project-ca.crt:/etc/ssl/certs/do-project-ca.crt:ro
