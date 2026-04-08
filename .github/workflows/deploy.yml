@@ -7,12 +7,32 @@ on:
 
 jobs:
   deploy:
-    uses: loadingcloud001/dev-standards/.github/workflows/deploy-template.yml@main
-    with:
-      service_name: n8n
-      service_path: /opt/loading-n8n
-      health_url: https://n8n.loadingtechnology.app
-    secrets:
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      SSH_HOST: ${{ secrets.SSH_HOST }}
-      SSH_USER: root
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 157.245.148.63 >> ~/.ssh/known_hosts
+
+      - name: Deploy to droplet
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@157.245.148.63 "mkdir -p /opt/loading-n8n"
+          scp -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes docker-compose.yml root@157.245.148.63:/opt/loading-n8n/
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@157.245.148.63 << 'ENDSSH'
+            cd /opt/loading-n8n
+            docker-compose down 2>/dev/null || true
+            docker-compose up -d
+            docker-compose ps
+          ENDSSH
+
+      - name: Verify deployment
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@157.245.148.63 "docker ps --filter name=n8n"
