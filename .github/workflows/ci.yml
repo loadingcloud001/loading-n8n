@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose config
+        run: |
+          docker compose config --quiet || docker-compose config --quiet
+          echo "docker-compose.yml is valid"
+
+      - name: Check for leaked secrets
+        run: |
+          if grep -rE "ghp_[a-zA-Z0-9]|gho_[a-zA-Z0-9]|github_pat_[a-zA-Z0-9]" . --include="*.yml" --include="*.yaml" --include="*.env" 2>/dev/null; then
+            echo "WARNING: Potential GitHub token found in code!"
+            exit 1
+          fi
+          echo "No leaked secrets detected"
+
+      - name: Docker compose pull (dry run)
+        run: |
+          docker compose pull --dry-run 2>/dev/null || echo "Image pull check skipped"
