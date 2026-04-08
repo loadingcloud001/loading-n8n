@@ -14,7 +14,11 @@ jobs:
 
       - name: Validate docker-compose config
         run: |
-          docker compose config --quiet || docker-compose config --quiet
+          # Create dummy .env for validation if it doesn't exist
+          if [ ! -f .env ]; then
+            touch .env
+          fi
+          docker compose config --quiet
           echo "docker-compose.yml is valid"
 
       - name: Check for leaked secrets
