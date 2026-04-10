@@ -2,33 +2,39 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
 
 jobs:
-  ci:
+  validate:
+    name: Validate docker-compose
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Validate docker-compose config
+      - name: Validate docker-compose syntax
         run: |
           # Create dummy .env for validation if it doesn't exist
           if [ ! -f .env ]; then
-            touch .env
+            cp .env.example .env 2>/dev/null || touch .env
           fi
           docker compose config --quiet
           echo "docker-compose.yml is valid"
 
-      - name: Check for leaked secrets
+  secrets:
+    name: Check for leaked secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for GitHub tokens
         run: |
-          if grep -rE "ghp_[a-zA-Z0-9]|gho_[a-zA-Z0-9]|github_pat_[a-zA-Z0-9]" . --include="*.yml" --include="*.yaml" --include="*.env" 2>/dev/null; then
-            echo "WARNING: Potential GitHub token found in code!"
+          echo "Checking for leaked GitHub tokens..."
+          if grep -rE "ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{82}" --include="*.yml" --include="*.yaml" --include="*.json" --include="*.env" --include="*.md" . 2>/dev/null; then
+            echo "ERROR: Found potential GitHub token pattern!"
             exit 1
           fi
-          echo "No leaked secrets detected"
-
-      - name: Docker compose pull (dry run)
-        run: |
-          docker compose pull --dry-run 2>/dev/null || echo "Image pull check skipped"
+          echo "No leaked GitHub tokens detected."

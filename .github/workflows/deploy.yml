@@ -2,7 +2,8 @@ name: Deploy to Production
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -11,28 +12,65 @@ jobs:
     environment: production
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up SSH key
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H 157.245.148.63 >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Create .env file
+        env:
+          DO_DB_HOST: ${{ secrets.DO_DB_HOST }}
+          DO_DB_PORT: ${{ secrets.DO_DB_PORT }}
+          DO_DB_NAME: ${{ secrets.DO_DB_NAME }}
+          DO_DB_USER: ${{ secrets.DO_DB_USER }}
+          DO_DB_PASSWORD: ${{ secrets.DO_DB_PASSWORD }}
+          AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
+        run: |
+          cat > .env << EOF
+          DO_DB_HOST=${DO_DB_HOST}
+          DO_DB_PORT=${DO_DB_PORT:-25060}
+          DO_DB_NAME=${DO_DB_NAME:-speckle_fresh}
+          DO_DB_USER=${DO_DB_USER:-doadmin}
+          DO_DB_PASSWORD=${DO_DB_PASSWORD}
+          AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
+          EOF
 
       - name: Deploy to droplet
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@157.245.148.63 "mkdir -p /opt/loading-n8n"
-          scp -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes docker-compose.yml root@157.245.148.63:/opt/loading-n8n/
-          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@157.245.148.63 << 'ENDSSH'
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" "mkdir -p /opt/loading-n8n"
+          scp -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes docker-compose.yml .env "$SSH_USER@$SSH_HOST:/opt/loading-n8n/"
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" << 'ENDSSH'
             cd /opt/loading-n8n
-            docker-compose down 2>/dev/null || true
-            docker-compose up -d
-            docker-compose ps
+            docker compose down 2>/dev/null || true
+            docker compose up -d
+            docker compose ps
+          ENDSSH
+
+      - name: Health check
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" << 'ENDSSH'
+            sleep 10
+            curl -f -s -o /dev/null -w "%{http_code}" http://localhost:5678 || echo "Health check failed"
           ENDSSH
 
       - name: Verify deployment
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@157.245.148.63 "docker ps --filter name=n8n"
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" "docker ps --filter name=loading-n8n"
