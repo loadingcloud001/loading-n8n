@@ -54,9 +54,9 @@ jobs:
           scp -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes docker-compose.yml .env "$SSH_USER@$SSH_HOST:/opt/loading-n8n/"
           ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" << 'ENDSSH'
             cd /opt/loading-n8n
-            docker compose down 2>/dev/null || true
-            docker compose up -d
-            docker compose ps
+            docker-compose down 2>/dev/null || true
+            docker-compose up -d
+            docker-compose ps
           ENDSSH
 
       - name: Health check
