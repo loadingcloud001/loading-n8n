@@ -36,7 +36,7 @@ jobs:
           DO_DB_PASSWORD: ${{ secrets.DO_DB_PASSWORD }}
           AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
         run: |
-          cat > .env << 'EOF'
+          cat > .env << EOF
           DO_DB_HOST=${DO_DB_HOST}
           DO_DB_PORT=${DO_DB_PORT:-25060}
           DO_DB_NAME=${DO_DB_NAME:-loading_n8n}
