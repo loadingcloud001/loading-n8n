@@ -5,6 +5,11 @@ services:
     image: n8nio/n8n:latest
     container_name: loading-n8n
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "5678:5678"
     networks:
