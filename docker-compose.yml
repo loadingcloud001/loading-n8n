@@ -13,9 +13,6 @@ services:
     ports:
       - "5678:5678"
     networks:
-      cmp-network:
-        aliases:
-          - n8n
       nginx-network:
         aliases:
           - n8n
@@ -47,9 +44,6 @@ services:
       - /usr/local/share/ca-certificates/do-project-ca.crt:/etc/ssl/certs/do-project-ca.crt:ro
 
 networks:
-  cmp-network:
-    external: true
-    name: cmp-network
   nginx-network:
     external: true
     name: nginx-network
