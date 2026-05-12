@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   n8n:
     image: n8nio/n8n:${N8N_VERSION:-latest}
@@ -37,23 +39,12 @@ services:
       # SSL / CA
       - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/do-project-ca.crt
     volumes:
-      - n8n_data:/home/node/.n8n
       - /usr/local/share/ca-certificates/do-project-ca.crt:/etc/ssl/certs/do-project-ca.crt:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "-s", "-o", "/dev/null", "http://localhost:5678/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-
-volumes:
-  n8n_data:
-    name: loading-n8n-data
 
 networks:
   nginx-network:

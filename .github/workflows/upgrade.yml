@@ -122,8 +122,8 @@ jobs:
             echo "=== Pulling new n8n image ==="
             docker-compose pull n8n
 
-            echo "=== Stopping current n8n (graceful, 30s timeout) ==="
-            docker-compose stop -t 30 n8n || true
+            echo "=== Removing old container (compose v1 recreate bug workaround) ==="
+            docker-compose down 2>/dev/null || true
 
             echo "=== Starting n8n with new version ==="
             docker-compose up -d n8n
