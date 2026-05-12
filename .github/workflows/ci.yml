@@ -16,12 +16,43 @@ jobs:
 
       - name: Validate docker compose syntax
         run: |
-          # Create dummy .env for validation if it doesn't exist
-          if [ ! -f .env ]; then
-            cp .env.example .env 2>/dev/null || touch .env
-          fi
+          # Create dummy .env for validation with N8N_VERSION default
+          cat > .env << 'EOF'
+          DO_DB_HOST=localhost
+          DO_DB_PORT=25060
+          DO_DB_NAME=loading_n8n
+          DO_DB_USER=doadmin
+          DO_DB_PASSWORD=test
+          AUTH0_CLIENT_SECRET=test
+          N8N_VERSION=latest
+          EOF
           docker compose config --quiet
-          echo "docker compose.yml is valid"
+          echo "docker-compose.yml is valid"
+
+  version-check:
+    name: Check N8N_VERSION consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify N8N_VERSION is set in compose
+        run: |
+          echo "=== Checking docker-compose.yml references N8N_VERSION ==="
+          if grep -q 'n8nio/n8n:\${N8N_VERSION' docker-compose.yml; then
+            echo "PASS: docker-compose.yml uses N8N_VERSION variable"
+          else
+            echo "WARN: docker-compose.yml does not use N8N_VERSION variable"
+          fi
+
+      - name: Verify no hardcoded version tags
+        run: |
+          echo "=== Checking for hardcoded n8n version tags ==="
+          if grep -n 'n8nio/n8n:' docker-compose.yml | grep -v 'N8N_VERSION' | grep -v '# '; then
+            echo "INFO: Found hardcoded n8n image references (may be intentional)"
+          else
+            echo "PASS: No hardcoded n8n versions found"
+          fi
 
   secrets:
     name: Check for leaked secrets
@@ -38,3 +69,12 @@ jobs:
             exit 1
           fi
           echo "No leaked GitHub tokens detected."
+
+      - name: Check for hardcoded database passwords
+        run: |
+          echo "Checking for hardcoded passwords in docs..."
+          if grep -rP "PASSWORD=[A-Za-z0-9]{10,}" --include="*.md" . 2>/dev/null && ! grep -rP "DO_DB_PASSWORD=<" --include="*.md" . 2>/dev/null; then
+            echo "WARN: Potential hardcoded password found in documentation files"
+          else
+            echo "PASS: No obvious hardcoded passwords in docs"
+          fi

@@ -1,15 +1,9 @@
-version: '3.8'
-
 services:
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:${N8N_VERSION:-latest}
     container_name: loading-n8n
     restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+    stop_grace_period: 30s
     ports:
       - "5678:5678"
     networks:
@@ -22,16 +16,17 @@ services:
       - WEBHOOK_URL=https://n8n.loadingtechnology.app
       - N8N_PROTOCOL=https
       - N8N_AUTH_MODE=oauth2
-      # DO Managed PostgreSQL (DO 003)
+      # DO Managed PostgreSQL — loading-postgres cluster (DO 003)
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=${DO_DB_HOST}
       - DB_POSTGRESDB_PORT=${DO_DB_PORT:-25060}
-      - DB_POSTGRESDB_DATABASE=${DO_DB_NAME:-speckle_fresh}
+      - DB_POSTGRESDB_DATABASE=${DO_DB_NAME:-loading_n8n}
       - DB_POSTGRESDB_USER=${DO_DB_USER:-doadmin}
       - DB_POSTGRESDB_PASSWORD=${DO_DB_PASSWORD}
       - DB_POSTGRESDB_SCHEMA=public
       - DB_POSTGRESDB_SSL=true
       - DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED=false
+      # Auth0 OAuth2 SSO
       - N8N_OAUTH2_CLIENT_ID=ws8wBaPdXYFWwNAtva4YWQmCuT1Ah0AT
       - N8N_OAUTH2_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
       - N8N_OAUTH2_ISSUER=https://dev-63h751qzectzner7.us.auth0.com/
@@ -39,9 +34,26 @@ services:
       - N8N_OAUTH2_CALLBACK_URL=https://n8n.loadingtechnology.app/rest/authenticate
       - N8N_OAUTH2_TOKEN_URL=https://dev-63h751qzectzner7.us.auth0.com/oauth/token
       - N8N_OAUTH2_SCOPES=openid profile email
+      # SSL / CA
       - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/do-project-ca.crt
     volumes:
+      - n8n_data:/home/node/.n8n
       - /usr/local/share/ca-certificates/do-project-ca.crt:/etc/ssl/certs/do-project-ca.crt:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  n8n_data:
+    name: loading-n8n-data
 
 networks:
   nginx-network:
