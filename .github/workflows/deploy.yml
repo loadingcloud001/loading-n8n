@@ -123,16 +123,16 @@ jobs:
             cd /opt/loading-n8n
 
             echo "=== Pulling latest image ==="
-            docker compose pull n8n
+            docker-compose pull n8n
 
             echo "=== Stopping current n8n (graceful shutdown) ==="
-            docker compose stop -t 30 n8n 2>/dev/null || true
+            docker-compose stop -t 30 n8n 2>/dev/null || true
 
             echo "=== Starting n8n ==="
-            docker compose up -d n8n
+            docker-compose up -d n8n
 
             echo "=== Container status ==="
-            docker compose ps
+            docker-compose ps
           ENDSSH
 
       - name: Health check with retry

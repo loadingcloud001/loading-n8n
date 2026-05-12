@@ -120,16 +120,16 @@ jobs:
             cd /opt/loading-n8n
 
             echo "=== Pulling new n8n image ==="
-            docker compose pull n8n
+            docker-compose pull n8n
 
             echo "=== Stopping current n8n (graceful, 30s timeout) ==="
-            docker compose stop -t 30 n8n || true
+            docker-compose stop -t 30 n8n || true
 
             echo "=== Starting n8n with new version ==="
-            docker compose up -d n8n
+            docker-compose up -d n8n
 
             echo "=== Container status ==="
-            docker compose ps
+            docker-compose ps
           ENDSSH
 
       - name: Health check with retry
@@ -194,14 +194,14 @@ jobs:
             cd /opt/loading-n8n
 
             echo "=== Stopping failed version ==="
-            docker compose down n8n 2>/dev/null || true
+            docker-compose down n8n 2>/dev/null || true
 
             echo "=== Restarting previous version ==="
-            docker compose pull n8n
-            docker compose up -d n8n
+            docker-compose pull n8n
+            docker-compose up -d n8n
 
             echo "=== Rollback container status ==="
-            docker compose ps
+            docker-compose ps
           ENDSSH
 
           echo "ROLLBACK COMPLETED. Check /healthz endpoint manually to verify."
